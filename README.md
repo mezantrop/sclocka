@@ -2,9 +2,11 @@
 
 ## Screen saver/lock for terminals
 
-Protect a terminal with a screensaver and lock it with a password. `Sclocka` runs on *BSD, macOS and Linux.
+<a href="https://www.buymeacoffee.com/mezantrop" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/default-orange.png" alt="Buy Me A Coffee" height="41" width="174"></a>
 
-If you interested more in a screensaver, than a screenlock, check [ASCII Saver - Screensaver for terminals](https://gitlab.com/mezantrop/ascsaver)
+Protect your terminal with a screensaver and lock it with a password. `Sclocka` runs on *BSD, macOS and Linux
+
+If you are more interested in a screensaver than a screenlock, check [ASCII Saver - Screensaver for terminals](https://gitlab.com/mezantrop/ascsaver)
 
 ![Sclocka](sclocka.gif)
 
