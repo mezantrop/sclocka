@@ -36,18 +36,19 @@
 #include <termios.h>
 #include <unistd.h>
 #include <time.h>
-#include <sys/errno.h>
+#include <errno.h>
 #include <sys/ioctl.h>
 #include <sys/param.h>
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <security/pam_appl.h>
+#include <security/openpam.h>
 
 #ifdef __FreeBSD__
     #include <libutil.h>
 #endif
 
-#if defined(_OpenBSD__) || defined(__APPLE__)
+#if defined(__APPLE__) || defined(__NetBSD__) || defined(__OpenBSD__)
     #include <util.h>
 #endif
 
@@ -459,11 +460,14 @@ int pam_auth(char *user) {
     static pam_handle_t *pamh;
     static struct pam_conv pamc;
     int rval;
+    char *tty_name;
 
 
     pamc.conv = &pam_conv;
     /* Pretend we want login service */
     rval = pam_start("login", user, &pamc, &pamh);
+    tty_name = ttyname(STDIN_FILENO);
+    if (rval == PAM_SUCCESS) rval = pam_set_item(pamh, PAM_TTY, tty_name);
     if (rval == PAM_SUCCESS) rval = pam_authenticate(pamh, 0);
     if (pam_end(pamh, rval) != PAM_SUCCESS) pamh = NULL;
 
