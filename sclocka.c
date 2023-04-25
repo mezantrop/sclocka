@@ -91,7 +91,7 @@
 #define RSCR_NONE       'n'
 #define RSCR_BUFF       'b'
 #define RSCR_CAPS       'c'
-#define RSCR_DEFT       RSCR_CAPS
+#define RSCR_DEFT       RSCR_BUFF
 
 /* -------------------------------------------------------------------------- */
 void quit(int ecode);
@@ -134,7 +134,7 @@ int main(int argc, char *argv[]) {
     long ival = IVAL;                   /* Start interval in secs */
     int pflg = 1;                       /* Enable password check */
     int speed = SPEED;                  /* Animation speed in milliseconds */
-    char bflg = RSCR_DEFT;              /* Default restore screen method */
+    char bflg = RSCR_BUFF;              /* Default restore screen method */
 
     
     while ((flg = getopt(argc, argv, "b:ci:ps:h")) != -1)
