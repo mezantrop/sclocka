@@ -24,6 +24,13 @@ If you are more interested in a screensaver than a screenlock, check [ASCII Save
 - [ ] Packages/ports
 - [ ] Documentation
 
+[Changelog](CHANGELOG.md)
+[Issues](https://github.com/mezantrop/sclocka/issues)
+
+### Thanks to
+
+[Contributors](CONTRIBUTORS.md)
+
 ### Build and install
 
 Build Requirements
