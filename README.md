@@ -71,7 +71,7 @@ Wait for a screensaver to appear
 `Sclocka` can be envoked with several options:
 
 ```sh
-$ ./sclocka -h
+$ sclocka -h
 
 "Sclocka - screen saver/lock for terminals, v1.0
 
