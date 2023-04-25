@@ -26,7 +26,7 @@ If you are more interested in a screensaver than a screenlock, check [ASCII Save
 
 ### Build and install
 
-Build Requirements:
+Build Requirements
 
 - CLANG or GCC
 - make
@@ -36,7 +36,7 @@ Build Requirements:
 
 `# make install clean`
 
-#### Debian flavour Linux
+#### Debian flavor Linux
 
 Make sure you have everything to compile sources:
 
@@ -78,7 +78,7 @@ $ ./sclocka -h
 Usage:
         sclocka [-b n|b|c][-c][-p][-i n][-s n][-h]
 
-[-b c]  Restore the screen after the saver: (n)one, (b)uffer, (c)apabilities
+[-b b]  Restore the screen after the saver: (n)one, (b)uffer, (c)apabilities
 [-c]    Clear the screen before starting the screensaver
 [-p]    Disable PAM password check
 [-i 5]  Wait n minutes before launching the screensaver
