@@ -39,7 +39,7 @@ Build Requirements
 - make
 - PAM development libraries
 
-#### *BSD
+#### *BSD / macOS
 
 `# make install clean`
 
