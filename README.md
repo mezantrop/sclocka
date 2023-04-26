@@ -51,7 +51,7 @@ perform password authentication via PAM, install [unix-selfauth-helper](https://
 # pkg install unix-selfauth-helper
 ```
 
-Create and configure a PAM service e.g. /etc/pam.d/sclocka:
+Create and configure a special PAM service e.g. /etc/pam.d/sclocka:
 
 ```
 auth            sufficient      pam_exec.so             return_prog_exit_status expose_authtok /usr/local/libexec/unix-selfauth-helper
@@ -68,6 +68,7 @@ $ sclocka -P sclocka
 #### macOS
 
 `# make install clean`
+
 Note, you may be prompted to install command line developer tools
 
 #### Debian flavor Linux
