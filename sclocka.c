@@ -42,9 +42,8 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <security/pam_appl.h>
-#include <security/openpam.h>
 
-#ifdef __FreeBSD__
+#if defined (__FreeBSD__)
     #include <libutil.h>
 #endif
 
@@ -94,20 +93,21 @@
 #define RSCR_CAPS       'c'
 #define RSCR_DEFT       RSCR_BUFF
 
+#define PAM_SERV        "login"
+
 /* -------------------------------------------------------------------------- */
 void quit(int ecode);
 void trap(int sig);
 void wait4child(pid_t pid);
 int run_show();
-int read_password(char ch, int lock, char *user, char *host);
-int pam_auth(char *user);
+int read_password(char ch, int lock, char *user, char *host, char *pam_service);
+int pam_auth(char *user, char *service);
 void usage(int ecode);
 
 /* -------------------------------------------------------------------------- */
 int master, slave;      /* PTY master/slave parts */
 struct termios tt;      /* Original terminal capabilities */
 int cx, cy, sy, sx;     /* Current and absolute positions */
-
 char passwd[PAM_MAX_RESP_SIZE];
 int pwd_ofs = 0;
 int lock = 2;           /* 0: password unlocked; 1: locked; 2: locked 1st run */
@@ -131,14 +131,17 @@ int main(int argc, char *argv[]) {
     char host[MAXHOSTNAMELEN];          /* hostname */
 
     int flg;                            /* Command-line options flag */
-    int cls = 1;                        /* Clear screen on the first run */
+    int cflg = 1;                       /* Clear screen on the first run */
+    int cls = 1;                        /* Perform screen cleaning or not */
     long ival = IVAL;                   /* Start interval in secs */
-    int pflg = 1;                       /* Enable password check */
     int speed = SPEED;                  /* Animation speed in milliseconds */
     char bflg = RSCR_BUFF;              /* Default restore screen method */
+    
+    int pflg = 1;                       /* Enable password check */
+    char *pam_service = PAM_SERV;       /* PAM service to use */
 
     
-    while ((flg = getopt(argc, argv, "b:ci:ps:h")) != -1)
+    while ((flg = getopt(argc, argv, "b:ci:pP:s:h")) != -1)
         switch(flg) {
             case 'b':
                 /* Restore the screen after the saver: 
@@ -149,7 +152,7 @@ int main(int argc, char *argv[]) {
                 bflg = *optarg;
                 break;
             case 'c':
-                cls = 1;            /* Clear screen on the first run */
+                cls = cflg = 0;     /* Do not clean the screen on the 1-st run */
                 break;
             case 'i':
                 if ((ival = strtol(optarg, (char **)NULL, 10)) < 1) {
@@ -159,6 +162,9 @@ int main(int argc, char *argv[]) {
                 break;
             case 'p':
                 pflg = 0;           /* Disable password check */
+                break;
+            case 'P':
+                pam_service = optarg;
                 break;
             case 's':
                 if ((speed = strtol(optarg, (char **)NULL, 10)) < 1) {
@@ -251,7 +257,8 @@ int main(int argc, char *argv[]) {
                     if (!in_show) write(master, buf, cc);
                 else {
                         /* Ask for password */
-                        lock = read_password(buf[0], lock, user, host);
+                        lock = read_password(buf[0], lock, user, host, pam_service);
+                        if (cflg) cls = 1;
 
                         if (!pflg || !lock) {
                             /* Allow user to proceed */
@@ -341,15 +348,15 @@ int main(int argc, char *argv[]) {
         /* -- Start show if the time has come ------------------------------- */
         tvec = time(0);
         if ((tvec - start) > ival * 60) {
-            /* capture the screen, clear it (if needed) and 
-            hide cursor before the first run */
-            if (!in_show) { 
-                if (bflg == RSCR_CAPS) NSCR(); 
-                if (cls) {
-                    CLR(); 
-                    CLS(); 
-                }
+            /* capture the screen, clear it (if needed) and hide cursor */
+            if (cls) {
+                CLR(); CLS(); cls = 0;
             }
+            if (!in_show) { 
+                if (bflg == RSCR_CAPS) NSCR();
+                cls = cflg ? 1 : 0;
+            }
+
             HIDE_CURSOR();
 
             in_show = 1;
@@ -372,7 +379,7 @@ int run_show() {
 }
 
 /* -------------------------------------------------------------------------- */
-int read_password(char ch, int lock, char *user, char *host) {
+int read_password(char ch, int lock, char *user, char *host, char *pam_service) {
     if (lock == 2) {
         /* Clear screen, draw prompt on the first I/O */
         CLR(); CLS(); SHOW_CURSOR();
@@ -389,7 +396,7 @@ int read_password(char ch, int lock, char *user, char *host) {
         case '\n':                  /* Check password */
             CLL(); 
 		    printf(PWD_PROMPT, user, host);
-            if (!(pam_auth(user))) {
+            if (!(pam_auth(user, pam_service))) {
                 memset(passwd, 0, sizeof(passwd));
                 pwd_ofs = 0;
                 CLL();
@@ -441,11 +448,11 @@ int pam_conv(int n, const struct pam_message **msg, struct pam_response **resp,
                 break;
             default:
                 /* Clear possible passwords in responces; then free memory */
-                    for (i = 0; i < n; i++)
-                        if (pr[i].resp) {
-                            memset(pr[i].resp, 0, strlen(pr[i].resp));
-                            free(pr[i].resp);
-                        }
+                for (i = 0; i < n; i++)
+                    if (pr[i].resp) {
+                        memset(pr[i].resp, 0, strlen(pr[i].resp));
+                        free(pr[i].resp);
+                    }
                 free(pr);
                 *resp = NULL;
                 return PAM_CONV_ERR;
@@ -456,18 +463,15 @@ int pam_conv(int n, const struct pam_message **msg, struct pam_response **resp,
 }
 
 /* -------------------------------------------------------------------------- */
-int pam_auth(char *user) {
+int pam_auth(char *user, char *service) {
     static pam_handle_t *pamh;
     static struct pam_conv pamc;
     int rval;
-    char *tty_name;
-
+ 
 
     pamc.conv = &pam_conv;
     /* Pretend we want login service */
-    rval = pam_start("login", user, &pamc, &pamh);
-    tty_name = ttyname(STDIN_FILENO);
-    if (rval == PAM_SUCCESS) rval = pam_set_item(pamh, PAM_TTY, tty_name);
+    rval = pam_start(service, user, &pamc, &pamh);
     if (rval == PAM_SUCCESS) rval = pam_authenticate(pamh, 0);
     if (pam_end(pamh, rval) != PAM_SUCCESS) pamh = NULL;
 
@@ -519,12 +523,15 @@ void wait4child(pid_t pid) {
 /* -------------------------------------------------------------------------- */
 void usage(int ecode) {
 	printf("%s\n\nUsage:\n\
-\tsclocka [-b n|b|c][-c][-p][-i n][-s n][-h]\n\n\
-[-b %c]\tRestore the screen after the saver: (n)one, (b)uffer, (c)apabilities\n\
-[-c]\tClear the screen before starting the screensaver\n\
-[-p]\tDisable PAM password check\n\
-[-i %d]\tWait n minutes before launching the screensaver\n\
-[-s %d]\tScreensaver speed n in milliseconds\n\
-[-h]\tThis message\n\n", __PROGRAM, RSCR_DEFT, IVAL, SPEED);
+\tsclocka [-b n|b|c] [-c] [-i n] [-s n] [-p] [-P service] [-h]\n\n\
+[-b %c]\t\tMethod to restore the screen: (n)one, (b)uffer, (c)apabilities\n\
+[-c]\t\tDo not clear the window\n\
+[-i %d]\t\tWait n minutes before launching the screensaver\n\
+[-s %d]\t\tScreensaver speed n in milliseconds\n\
+\n\
+[-p]\t\tDisable PAM password check\n\
+[-P %s]\tSet custom PAM service\n\
+\n\
+[-h]\t\tThis message\n\n", __PROGRAM, RSCR_DEFT, IVAL, SPEED, PAM_SERV);
     exit(ecode);
 }

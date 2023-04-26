@@ -40,9 +40,35 @@ Build Requirements
 - make
 - PAM development libraries
 
-#### *BSD / macOS
+#### FreeBSD
 
 `# make install clean`
+
+Note, the default `login` PAM service on FreeBSD doesn't check a user's password for the same login. To allow `sclocka`
+perform password authentication via PAM, install [unix-selfauth-helper](https://github.com/Zirias/unix-selfauth-helper):
+
+```sh
+# pkg install unix-selfauth-helper
+```
+
+Create and configure a PAM service e.g. /etc/pam.d/sclocka:
+
+```
+auth            sufficient      pam_exec.so             return_prog_exit_status expose_authtok /usr/local/libexec/unix-selfauth-helper
+auth            include         system
+account         include         system
+```
+
+Start `sclocka` with `-P sclocka` option:
+
+```sh
+$ sclocka -P sclocka
+```
+
+#### macOS
+
+`# make install clean`
+Note, you may be prompted to install command line developer tools
 
 #### Debian flavor Linux
 
@@ -51,10 +77,9 @@ Make sure you have everything to compile sources:
 ```sh
 $ sudo apt-get install build-essential
 $ sudo apt-get install libpam0g-dev
-```
 
-Then:
-`$ sudo make install clean`
+$ sudo make install clean
+```
 
 #### Red Hat based Linux
 
@@ -63,10 +88,9 @@ Make sure you have everything to compile sources:
 ```sh
 $ sudo dnf groupinstall "Development Tools"
 $ sudo dnf install pam-devel
-```
 
-Then:
-`$ sudo make install clean`
+$ sudo make install clean
+```
 
 ### Run
 
@@ -81,17 +105,20 @@ Wait for a screensaver to appear
 ```sh
 $ sclocka -h
 
-"Sclocka - screen saver/lock for terminals, v1.0
+Sclocka - screen saver/lock for terminals, v1.0
 
 Usage:
-        sclocka [-b n|b|c][-c][-p][-i n][-s n][-h]
+        sclocka [-b n|b|c] [-c] [-i n] [-s n] [-p] [-P service] [-h]
 
-[-b b]  Restore the screen after the saver: (n)one, (b)uffer, (c)apabilities
-[-c]    Clear the screen before starting the screensaver
-[-p]    Disable PAM password check
-[-i 5]  Wait n minutes before launching the screensaver
-[-s 64] Screensaver speed n in milliseconds
-[-h]    This message
+[-b b]          Method to restore the screen: (n)one, (b)uffer, (c)apabilities
+[-c]            Do not clear the window
+[-i 5]          Wait n minutes before launching the screensaver
+[-s 64]         Screensaver speed n in milliseconds
+
+[-p]            Disable PAM password check
+[-P login]      Set custom PAM service
+
+[-h]            This message
 ```
 
 ### Contacts
