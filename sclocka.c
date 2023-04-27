@@ -68,8 +68,8 @@
 #define CLS()         fputs("\033[1H\033[J", stdout)       /* Clear screen */
 #define CLR()         fputs("\033[0m", stdout)             /* Reset graphic */
 #define SET_POS(y, x) fprintf(stdout, "\033[%d;%dH", y, x) /* Set cursor XY */
-#define ASCR()        fputs("\033[?47h", stdout)           /* Alt scr buffer */
-#define NSCR()        fputs("\033[?47l", stdout)           /* normal scr buffer */
+#define ASCR()        fputs("\033[?1049h", stdout)         /* Alt scr buffer */
+#define NSCR()        fputs("\033[?1049l", stdout)         /* normal scr buffer */
 
 /* Get cursor position */
 #define GET_POS(y, x) {\
