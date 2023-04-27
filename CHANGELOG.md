@@ -1,6 +1,7 @@
 # Changelog
 
-* 2023.04.26        Current state
+* 2023.04.27        Current state
+  * Better `[-b c]` terminal capabilities screen restore
   * Updated [README.md](README.md) to reflect changes
   * Added `[-P service]` option to specify a custom PAM service. Useful under
     FreeBSD and others. See the [issue](https://github.com/mezantrop/sclocka/issues/1)

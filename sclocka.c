@@ -264,7 +264,7 @@ int main(int argc, char *argv[]) {
                             /* Allow user to proceed */
                             CLR(); CLS(); SHOW_CURSOR();
                             if (bflg == RSCR_CAPS)
-                                ASCR();
+                                NSCR();
                             else if (bflg == RSCR_BUFF)
                                 /* from the screen buffer, write out contents
                                 of the current screen + 2*current screen */
@@ -349,12 +349,17 @@ int main(int argc, char *argv[]) {
         tvec = time(0);
         if ((tvec - start) > ival * 60) {
             /* capture the screen, clear it (if needed) and hide cursor */
-            if (cls) {
-                CLR(); CLS(); cls = 0;
-            }
+            if (bflg != RSCR_CAPS)
+                if (cls) {
+                    CLR(); CLS(); cls = 0;
+                }
+
             if (!in_show) { 
-                if (bflg == RSCR_CAPS) NSCR();
-                cls = cflg ? 1 : 0;
+                if (bflg == RSCR_CAPS) {
+                    ASCR();
+                    CLR(); CLS();
+                } else 
+                    cls = cflg ? 1 : 0;
             }
 
             HIDE_CURSOR();
