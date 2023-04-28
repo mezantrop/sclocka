@@ -17,7 +17,7 @@ If you are more interested in a screensaver than a screenlock, check [ASCII Save
 - Supported platforms:
   - [x] Linux
   - [x] macOS
-  - [x] FreeBSD
+  - [x] FreeBSD, NetBSD
   - [ ] Others to be done
 - [ ] *Optional*. Integration with popular shells as a standard feature (?)
 - [ ] *Optional*. More screensaver animation types
@@ -64,6 +64,12 @@ Start `sclocka` with `-P sclocka` option:
 ```sh
 $ sclocka -P sclocka
 ```
+
+#### NetBSD
+
+`# make install clean`
+
+See notes about PAM helper from FreeBSD section
 
 #### macOS
 

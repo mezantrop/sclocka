@@ -1,7 +1,7 @@
 # Changelog
 
 * 2023.04.28        Current state
-  * `Makefile` tweaks
+  * [Makefile](Makefile) tweaks; [README.md](README.md) updated for NetBSD
   * `ESC[?1049` instead of `ESC[?147` for normal/alt terminal buffer switching
   * Better `[-b c]` terminal capabilities screen restore
   * Updated [README.md](README.md) to reflect changes
