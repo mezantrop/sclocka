@@ -136,12 +136,13 @@ int main(int argc, char *argv[]) {
     long ival = IVAL;                   /* Start interval in secs */
     int speed = SPEED;                  /* Animation speed in milliseconds */
     char bflg = RSCR_BUFF;              /* Default restore screen method */
-    
+    int Bflg = 0;                       /* Run screensaver animation */
+
     int pflg = 1;                       /* Enable password check */
     char *pam_service = PAM_SERV;       /* PAM service to use */
 
     
-    while ((flg = getopt(argc, argv, "b:ci:pP:s:h")) != -1)
+    while ((flg = getopt(argc, argv, "b:cBi:pP:s:h")) != -1)
         switch(flg) {
             case 'b':
                 /* Restore the screen after the saver: 
@@ -153,6 +154,9 @@ int main(int argc, char *argv[]) {
                 break;
             case 'c':
                 cls = cflg = 0;     /* Do not clean the screen on the 1-st run */
+                break;
+            case 'B':
+                Bflg = 1;           /* No screensaver animation */
                 break;
             case 'i':
                 if ((ival = strtol(optarg, (char **)NULL, 10)) < 1) {
@@ -367,7 +371,7 @@ int main(int argc, char *argv[]) {
             in_show = 1;
             lock = 2;               /* Reset lock to first try */
 
-            run_show();
+            if (!Bflg) run_show();
         }
     }
 
@@ -528,14 +532,15 @@ void wait4child(pid_t pid) {
 /* -------------------------------------------------------------------------- */
 void usage(int ecode) {
 	printf("%s\n\nUsage:\n\
-\tsclocka [-b n|b|c] [-c] [-i n] [-s n] [-p] [-P service] [-h]\n\n\
+\tsclocka [-b n|b|c] [-c] [-B] [-i n] [-s n] [-p] [-P service] [-h]\n\n\
 [-b %c]\t\tMethod to restore the screen: (n)one, (b)uffer, (c)apabilities\n\
 [-c]\t\tDo not clear the window\n\
+[-B]\t\tBlack-only, no screensaver animation\n\
 [-i %d]\t\tWait n minutes before launching the screensaver\n\
 [-s %d]\t\tScreensaver speed n in milliseconds\n\
 \n\
 [-p]\t\tDisable PAM password check\n\
-[-P %s]\tSet custom PAM service\n\
+[-P %s]\tUse custom PAM service\n\
 \n\
 [-h]\t\tThis message\n\n", __PROGRAM, RSCR_DEFT, IVAL, SPEED, PAM_SERV);
     exit(ecode);

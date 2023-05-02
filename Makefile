@@ -41,9 +41,8 @@ $(NAME): $(OBJS)
 	$(CC) -o $@ $(OBJS) $(LIBS)
 
 install: all
-	[ -f `which strip` ] && strip $(NAME)
 	install -d $(PREFIX)/bin 
-	install -m 755 $(NAME) $(PREFIX)/bin/
+	install -m 755 -s $(NAME) $(PREFIX)/bin/
 
 deinstall:
 	rm $(PREFIX)/bin/$(NAME)

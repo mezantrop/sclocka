@@ -115,15 +115,16 @@ $ sclocka -h
 Sclocka - screen saver/lock for terminals, v1.0
 
 Usage:
-        sclocka [-b n|b|c] [-c] [-i n] [-s n] [-p] [-P service] [-h]
+        sclocka [-b n|b|c] [-c] [-B] [-i n] [-s n] [-p] [-P service] [-h]
 
 [-b b]          Method to restore the screen: (n)one, (b)uffer, (c)apabilities
 [-c]            Do not clear the window
+[-B]            Black-only, no screensaver animation
 [-i 5]          Wait n minutes before launching the screensaver
 [-s 64]         Screensaver speed n in milliseconds
 
 [-p]            Disable PAM password check
-[-P login]      Set custom PAM service
+[-P login]      Use custom PAM service
 
 [-h]            This message
 ```

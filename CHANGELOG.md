@@ -1,6 +1,7 @@
 # Changelog
 
-* 2023.04.28        Current state
+* 2023.05.02        Current state
+  * `[-B]` option for Black-only, no screensaver animation
   * [Makefile](Makefile) tweaks; [README.md](README.md) updated for NetBSD
   * `ESC[?1049` instead of `ESC[?147` for normal/alt terminal buffer switching
   * Better `[-b c]` terminal capabilities screen restore
