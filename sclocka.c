@@ -539,15 +539,15 @@ void wait4child(pid_t pid) {
 void usage(int ecode) {
 	printf("%s\n\nUsage:\n\
 \tsclocka [-b n|b|c] [-c] [-B] [-i n] [-s n] [-p] [-P service] [-h]\n\n\
-[-b %c]  Screen restore method: (n)one, (f)ormfeed, (b)uffer, (c)apabilities\n\
-[-c]     Do not clear the window\n\
-[-B]     Black-only, no screensaver animation\n\
-[-i %d]  Wait n minutes before launching the screensaver\n\
-[-s %d]  Screensaver speed n in milliseconds\n\
+[-b %c]\t\tScreen restore: (n)one, (f)ormfeed, (b)uffer, (c)apabilities\n\
+[-c]\t\tDo not clear the window\n\
+[-B]\t\tBlack-only, no screensaver animation\n\
+[-i %d]\t\tWait n minutes before launching the screensaver\n\
+[-s %d]\t\tScreensaver speed n in milliseconds\n\
 \n\
-[-p]     Disable PAM password check\n\
-[-P %s]  Use custom PAM service\n\
+[-p]\t\tDisable PAM password check\n\
+[-P %s]\tUse custom PAM service\n\
 \n\
-[-h]     This message\n\n", __PROGRAM, RSCR_DEFT, IVAL, SPEED, PAM_SERV);
+[-h]\t\tThis message\n\n", __PROGRAM, RSCR_DEFT, IVAL, SPEED, PAM_SERV);
     exit(ecode);
 }
