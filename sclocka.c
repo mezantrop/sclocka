@@ -57,7 +57,7 @@
 #endif
 
 /* -------------------------------------------------------------------------- */
-#define __PROGRAM       "Sclocka - screen saver/lock for terminals, v1.0"
+#define __PROGRAM       "Sclocka - screen saver/lock for terminals, v1.0.1"
 
 #define NBF_STDOUT()    setvbuf(stdout, NULL, _IONBF, 0)
 #define LBF_STDOUT()    setvbuf(stdout, NULL, _IOLBF, 0)
@@ -89,9 +89,10 @@
 #define BUFSZ           1024            /* Various buffers */
 
 #define RSCR_NONE       'n'
+#define RSCR_FMFD       'f'
 #define RSCR_BUFF       'b'
 #define RSCR_CAPS       'c'
-#define RSCR_DEFT       RSCR_BUFF
+#define RSCR_DEFT       RSCR_FMFD
 
 #define PAM_SERV        "login"
 
@@ -141,14 +142,17 @@ int main(int argc, char *argv[]) {
     int pflg = 1;                       /* Enable password check */
     char *pam_service = PAM_SERV;       /* PAM service to use */
 
-    
+    unsigned char ff = 0x0C;            /* Form Feed */
+
+
     while ((flg = getopt(argc, argv, "b:cBi:pP:s:h")) != -1)
         switch(flg) {
             case 'b':
-                /* Restore the screen after the saver: 
+                /* Restore the screen after the saver:
                 (n)one, (b)uffer or default terminal (c)apabilities */
-                if (*optarg != RSCR_NONE && 
-                    *optarg != RSCR_BUFF && 
+                if (*optarg != RSCR_NONE &&
+                    *optarg != RSCR_FMFD &&
+                    *optarg != RSCR_BUFF &&
                     *optarg != RSCR_CAPS) usage(1);
                 bflg = *optarg;
                 break;
@@ -267,13 +271,15 @@ int main(int argc, char *argv[]) {
                         if (!pflg || !lock) {
                             /* Allow user to proceed */
                             CLR(); CLS(); SHOW_CURSOR();
-                            if (bflg == RSCR_CAPS)
+                            if (bflg == RSCR_FMFD)
+                                write(master, &ff, 1);  /* Send Form Feed */
+                            else if (bflg == RSCR_CAPS)
                                 NSCR();
                             else if (bflg == RSCR_BUFF)
                                 /* from the screen buffer, write out contents
                                 of the current screen + 2*current screen */
                                 if (scrbufp) {
-                                    int k = 0; 
+                                    int k = 0;
                                     int boffs = sizeof(scrbuf) - sy*sx - 2*sy*sx;
 
                                     for (k = 0; k < sy*sx + 2*sy*sx; k++) {
@@ -308,14 +314,14 @@ int main(int argc, char *argv[]) {
                                             }
                                             else if (k < sy*sx + 2*sy*sx + 1 && scrbuf[boffs + k + 1] == ']') {
                                                 /* ... fg/bg colors using:
-                                                OSC 10 ; ? BEL and 
+                                                OSC 10 ; ? BEL and
                                                 OSC 11 ; ? BEL */
                                                 while (scrbuf[boffs + k] != 7)
                                                     k++;
                                                 continue;
                                             }
                                             else if (k < sy*sx + 2*sy*sx + 1 && scrbuf[boffs + k + 1] == 'P') {
-                                                /* Step over DCS, assuming 
+                                                /* Step over DCS, assuming
                                                 it's body 3 bytes long */
                                                 k += 3;
                                                 continue;
@@ -331,7 +337,7 @@ int main(int argc, char *argv[]) {
                             cc = 0;
                             lock = 1;       /* lock again */
                         }
-                    } 
+                    }
                 }
             }
 
@@ -358,11 +364,11 @@ int main(int argc, char *argv[]) {
                     CLR(); CLS(); cls = 0;
                 }
 
-            if (!in_show) { 
+            if (!in_show) {
                 if (bflg == RSCR_CAPS) {
                     ASCR();
                     CLR(); CLS();
-                } else 
+                } else
                     cls = cflg ? 1 : 0;
             }
 
@@ -403,7 +409,7 @@ int read_password(char ch, int lock, char *user, char *host, char *pam_service) 
     switch(ch) {
         case '\r':
         case '\n':                  /* Check password */
-            CLL(); 
+            CLL();
 		    printf(PWD_PROMPT, user, host);
             if (!(pam_auth(user, pam_service))) {
                 memset(passwd, 0, sizeof(passwd));
@@ -433,7 +439,7 @@ int read_password(char ch, int lock, char *user, char *host, char *pam_service) 
 }
 
 /* -------------------------------------------------------------------------- */
-int pam_conv(int n, const struct pam_message **msg, struct pam_response **resp, 
+int pam_conv(int n, const struct pam_message **msg, struct pam_response **resp,
     void *data) {
 
     struct pam_response *pr;
@@ -476,7 +482,7 @@ int pam_auth(char *user, char *service) {
     static pam_handle_t *pamh;
     static struct pam_conv pamc;
     int rval;
- 
+
 
     pamc.conv = &pam_conv;
     /* Pretend we want login service */
@@ -533,15 +539,15 @@ void wait4child(pid_t pid) {
 void usage(int ecode) {
 	printf("%s\n\nUsage:\n\
 \tsclocka [-b n|b|c] [-c] [-B] [-i n] [-s n] [-p] [-P service] [-h]\n\n\
-[-b %c]\t\tMethod to restore the screen: (n)one, (b)uffer, (c)apabilities\n\
-[-c]\t\tDo not clear the window\n\
-[-B]\t\tBlack-only, no screensaver animation\n\
-[-i %d]\t\tWait n minutes before launching the screensaver\n\
-[-s %d]\t\tScreensaver speed n in milliseconds\n\
+[-b %c]  Screen restore method: (n)one, (f)ormfeed, (b)uffer, (c)apabilities\n\
+[-c]     Do not clear the window\n\
+[-B]     Black-only, no screensaver animation\n\
+[-i %d]  Wait n minutes before launching the screensaver\n\
+[-s %d]  Screensaver speed n in milliseconds\n\
 \n\
-[-p]\t\tDisable PAM password check\n\
-[-P %s]\tUse custom PAM service\n\
+[-p]     Disable PAM password check\n\
+[-P %s]  Use custom PAM service\n\
 \n\
-[-h]\t\tThis message\n\n", __PROGRAM, RSCR_DEFT, IVAL, SPEED, PAM_SERV);
+[-h]     This message\n\n", __PROGRAM, RSCR_DEFT, IVAL, SPEED, PAM_SERV);
     exit(ecode);
 }

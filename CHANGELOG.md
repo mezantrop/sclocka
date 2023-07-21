@@ -1,6 +1,7 @@
 # Changelog
 
-* 2023.05.02        Current state
+* 2023.07.21        sclocka-1.0.1
+  * Form Feed (^L) the default method to clear/restore screen after the show
   * `[-B]` option for Black-only, no screensaver animation
   * [Makefile](Makefile) tweaks; [README.md](README.md) updated for NetBSD
   * `ESC[?1049` instead of `ESC[?147` for normal/alt terminal buffer switching
@@ -15,4 +16,3 @@
 
 * 2023.04.24        sclocka-1.0
   * Initial release
-  
