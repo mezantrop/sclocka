@@ -31,18 +31,29 @@
 CC		= cc -O3
 CFLAGS += -Wall
 NAME	= sclocka
-LIBS	= -lutil -lpam
+LIBS	= -lutil
 OBJS	= $(NAME).o
 PREFIX ?= /usr/local
 
+.PHONY: all with_pam without_pam FreeBSD NetBSD Linux OpenBSD install \
+deinstall uninstall clean
 
-all: $(NAME)
+all:	with_pam
 
-$(NAME): $(OBJS)
-	$(CC) -o $@ $(OBJS) $(LIBS)
+with_pam:	$(OBJS)
+	$(CC) -DWITH_PAM=1 -o $(NAME) $(OBJS) $(LIBS) -lpam
 
-install: all
-	install -d $(PREFIX)/bin 
+FreeBSD:	without_pam
+NetBSD:		without_pam
+Linux:		without_pam
+
+without_pam:	$(OBJS)
+	$(CC) -o $(NAME) $(OBJS) $(LIBS)
+
+OpenBSD:	without_pam
+
+install:
+	install -d $(PREFIX)/bin
 	install -m 755 -s $(NAME) $(PREFIX)/bin/
 
 deinstall:
@@ -52,6 +63,5 @@ uninstall: deinstall
 
 clean:
 	rm -rf $(NAME) *.o *.dSYM *.core
-
 
 $(NAME).o: $(NAME).c

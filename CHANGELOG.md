@@ -1,5 +1,8 @@
 # Changelog
 
+* 2023.08.17        sclocka-1.0.2
+  * `WITH_PAM` variable to control linking PAM library; OpenBSD support
+
 * 2023.07.21        sclocka-1.0.1
   * Form Feed (^L) the default method to clear/restore screen after the show
   * `[-B]` option for Black-only, no screensaver animation

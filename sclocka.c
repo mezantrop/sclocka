@@ -41,7 +41,10 @@
 #include <sys/param.h>
 #include <sys/types.h>
 #include <sys/wait.h>
-#include <security/pam_appl.h>
+
+#if (WITH_PAM)
+    #include <security/pam_appl.h>
+#endif
 
 #if defined (__FreeBSD__)
     #include <libutil.h>
@@ -57,7 +60,7 @@
 #endif
 
 /* -------------------------------------------------------------------------- */
-#define __PROGRAM       "Sclocka - screen saver/lock for terminals, v1.0.1"
+#define __PROGRAM       "Sclocka - screen saver/lock for terminals, v1.0.2"
 
 #define NBF_STDOUT()    setvbuf(stdout, NULL, _IONBF, 0)
 #define LBF_STDOUT()    setvbuf(stdout, NULL, _IOLBF, 0)
@@ -94,23 +97,30 @@
 #define RSCR_CAPS       'c'
 #define RSCR_DEFT       RSCR_FMFD
 
-#define PAM_SERV        "login"
+#if (WITH_PAM)
+    #define PAM_SERV        "login"
+#endif
 
 /* -------------------------------------------------------------------------- */
 void quit(int ecode);
 void trap(int sig);
 void wait4child(pid_t pid);
 int run_show();
-int read_password(char ch, int lock, char *user, char *host, char *pam_service);
-int pam_auth(char *user, char *service);
+#if (WITH_PAM)
+    int read_password(char ch, int lock, char *user,
+        char *host, char *pam_service);
+    int pam_auth(char *user, char *service);
+#endif
 void usage(int ecode);
 
 /* -------------------------------------------------------------------------- */
 int master, slave;      /* PTY master/slave parts */
 struct termios tt;      /* Original terminal capabilities */
 int cx, cy, sy, sx;     /* Current and absolute positions */
-char passwd[PAM_MAX_RESP_SIZE];
-int pwd_ofs = 0;
+#if (WITH_PAM)
+    char passwd[PAM_MAX_RESP_SIZE];
+    int pwd_ofs = 0;
+#endif
 int lock = 2;           /* 0: password unlocked; 1: locked; 2: locked 1st run */
 
 /* -------------------------------------------------------------------------- */
@@ -128,9 +138,6 @@ int main(int argc, char *argv[]) {
     struct timeval tv;
     int in_show = 0;                    /* A flag to activite the show */
 
-    char *user;                         /* username */
-    char host[MAXHOSTNAMELEN];          /* hostname */
-
     int flg;                            /* Command-line options flag */
     int cflg = 1;                       /* Clear screen on the first run */
     int cls = 1;                        /* Perform screen cleaning or not */
@@ -139,13 +146,21 @@ int main(int argc, char *argv[]) {
     char bflg = RSCR_BUFF;              /* Default restore screen method */
     int Bflg = 0;                       /* Run screensaver animation */
 
-    int pflg = 1;                       /* Enable password check */
-    char *pam_service = PAM_SERV;       /* PAM service to use */
-
+    #if (WITH_PAM)
+        char *user;                     /* username */
+        char host[MAXHOSTNAMELEN];      /* hostname */
+        int pflg = 1;                   /* Enable password check */
+        char *pam_service = PAM_SERV;   /* PAM service to use */
+    #else
+        int pflg = 0;                   /* Disable password check */
+    #endif
     unsigned char ff = 0x0C;            /* Form Feed */
 
-
-    while ((flg = getopt(argc, argv, "b:cBi:pP:s:h")) != -1)
+    #if (WITH_PAM)
+        while ((flg = getopt(argc, argv, "b:cBi:pP:s:h")) != -1)
+    #else
+        while ((flg = getopt(argc, argv, "b:cBi:s:h")) != -1)
+    #endif
         switch(flg) {
             case 'b':
                 /* Restore the screen after the saver:
@@ -168,12 +183,14 @@ int main(int argc, char *argv[]) {
                     usage(1);
                 }
                 break;
+        #if (WITH_PAM)
             case 'p':
                 pflg = 0;           /* Disable password check */
                 break;
             case 'P':
                 pam_service = optarg;
                 break;
+        #endif
             case 's':
                 if ((speed = strtol(optarg, (char **)NULL, 10)) < 1) {
                     fprintf(stderr, "FATAL: wrong [-s speed] value");
@@ -228,8 +245,10 @@ int main(int argc, char *argv[]) {
 
     /* -- Parent continues here --------------------------------------------- */
     signal(SIGWINCH, trap);                 /* Catch window change signal */
-    user = getlogin();
-    gethostname(host, sizeof(host));
+    #if (WITH_PAM)
+        user = getlogin();
+        gethostname(host, sizeof(host));
+    #endif
 
     NBF_STDOUT(); GET_POS(cy, cx); SCR_SIZE(sy, sx); SET_POS(cy, cx);
     start = time(0);                        /* Set initial time */
@@ -265,7 +284,10 @@ int main(int argc, char *argv[]) {
                     if (!in_show) write(master, buf, cc);
                 else {
                         /* Ask for password */
-                        lock = read_password(buf[0], lock, user, host, pam_service);
+                        #if (WITH_PAM)
+                            lock = read_password(buf[0],
+                                lock, user, host, pam_service);
+                        #endif
                         if (cflg) cls = 1;
 
                         if (!pflg || !lock) {
@@ -394,6 +416,7 @@ int run_show() {
 }
 
 /* -------------------------------------------------------------------------- */
+#if (WITH_PAM)
 int read_password(char ch, int lock, char *user, char *host, char *pam_service) {
     if (lock == 2) {
         /* Clear screen, draw prompt on the first I/O */
@@ -402,7 +425,7 @@ int read_password(char ch, int lock, char *user, char *host, char *pam_service) 
         return 1;
     }
 
-    /* Not locked => exit */
+    /* Not locked --> exit */
     if (!lock) return 0;
 
     /* Get password char-by-char; handle Enter and backspace keys */
@@ -492,7 +515,7 @@ int pam_auth(char *user, char *service) {
 
     return rval == PAM_SUCCESS ? 0 : 1;
 }
-
+#endif
 /* -------------------------------------------------------------------------- */
 void quit(int ecode) {
     tcsetattr(STDIN_FILENO, TCSAFLUSH, &tt);            /* Restore TTY */
@@ -537,6 +560,8 @@ void wait4child(pid_t pid) {
 
 /* -------------------------------------------------------------------------- */
 void usage(int ecode) {
+
+#if (WITH_PAM)
 	printf("%s\n\nUsage:\n\
 \tsclocka [-b n|b|c] [-c] [-B] [-i n] [-s n] [-p] [-P service] [-h]\n\n\
 [-b %c]\t\tScreen restore: (n)one, (f)ormfeed, (b)uffer, (c)apabilities\n\
@@ -549,5 +574,16 @@ void usage(int ecode) {
 [-P %s]\tUse custom PAM service\n\
 \n\
 [-h]\t\tThis message\n\n", __PROGRAM, RSCR_DEFT, IVAL, SPEED, PAM_SERV);
+#else
+	printf("%s\n\nUsage:\n\
+\tsclocka [-b n|b|c] [-c] [-B] [-i n] [-s n] [-P service] [-h]\n\n\
+[-b %c]\t\tScreen restore: (n)one, (f)ormfeed, (b)uffer, (c)apabilities\n\
+[-c]\t\tDo not clear the window\n\
+[-B]\t\tBlack-only, no screensaver animation\n\
+[-i %d]\t\tWait n minutes before launching the screensaver\n\
+[-s %d]\t\tScreensaver speed n in milliseconds\n\
+\n\
+[-h]\t\tThis message\n\n", __PROGRAM, RSCR_DEFT, IVAL, SPEED);
+#endif
     exit(ecode);
 }
