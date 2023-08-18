@@ -112,7 +112,7 @@ Wait for a screensaver to appear
 ```sh
 $ sclocka -h
 
-Sclocka - screen saver/lock for terminals, v1.0.2
+Sclocka - screen saver/lock for terminals, v1.0.3
 
 Usage:
         sclocka [-b n|f|b|c] [-c] [-B] [-i n] [-s n] [-p] [-P service] [-h]
