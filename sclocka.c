@@ -60,7 +60,7 @@
 #endif
 
 /* -------------------------------------------------------------------------- */
-#define __PROGRAM       "Sclocka - screen saver/lock for terminals, v1.0.2"
+#define __PROGRAM       "Sclocka - screen saver/lock for terminals, v1.0.3"
 
 #define NBF_STDOUT()    setvbuf(stdout, NULL, _IONBF, 0)
 #define LBF_STDOUT()    setvbuf(stdout, NULL, _IOLBF, 0)
