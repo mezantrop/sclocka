@@ -112,12 +112,12 @@ Wait for a screensaver to appear
 ```sh
 $ sclocka -h
 
-Sclocka - screen saver/lock for terminals, v1.0
+Sclocka - screen saver/lock for terminals, v1.0.2
 
 Usage:
-        sclocka [-b n|b|c] [-c] [-B] [-i n] [-s n] [-p] [-P service] [-h]
+        sclocka [-b n|f|b|c] [-c] [-B] [-i n] [-s n] [-p] [-P service] [-h]
 
-[-b b]          Method to restore the screen: (n)one, (b)uffer, (c)apabilities
+[-b f]          Screen restore: (n)one, (f)ormfeed, (b)uffer, (c)apabilities
 [-c]            Do not clear the window
 [-B]            Black-only, no screensaver animation
 [-i 5]          Wait n minutes before launching the screensaver

@@ -1,5 +1,10 @@
 # Changelog
 
+* 2023.08.18        sclocka-1.0.3
+  * `Makefile` fixed, simplified
+  * `sclocka.c` minor typo fix
+  * `README.md` updated
+
 * 2023.08.17        sclocka-1.0.2
   * `WITH_PAM` variable to control linking PAM library; OpenBSD support
 

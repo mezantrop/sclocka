@@ -40,19 +40,19 @@ deinstall uninstall clean
 
 all:	with_pam
 
-with_pam:	$(OBJS)
-	$(CC) -DWITH_PAM=1 -o $(NAME) $(OBJS) $(LIBS) -lpam
+with_pam:
+	$(CC) $(CFLAGS) -DWITH_PAM=1 -o $(NAME) $(NAME).c $(LIBS) -lpam
 
 FreeBSD:	without_pam
 NetBSD:		without_pam
 Linux:		without_pam
 
-without_pam:	$(OBJS)
-	$(CC) -o $(NAME) $(OBJS) $(LIBS)
+without_pam:
+	$(CC) $(CFLAGS) -o $(NAME) $(NAME).c $(LIBS)
 
 OpenBSD:	without_pam
 
-install:
+install:	all
 	install -d $(PREFIX)/bin
 	install -m 755 -s $(NAME) $(PREFIX)/bin/
 
@@ -63,5 +63,3 @@ uninstall: deinstall
 
 clean:
 	rm -rf $(NAME) *.o *.dSYM *.core
-
-$(NAME).o: $(NAME).c
