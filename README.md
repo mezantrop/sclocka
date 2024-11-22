@@ -8,7 +8,14 @@ Protect your terminal with a screensaver and lock it with a password. `Sclocka` 
 
 If you are more interested in a screensaver than a screenlock, check [ASCII Saver - Screensaver for terminals](https://gitlab.com/mezantrop/ascsaver)
 
-![Sclocka](sclocka.gif)
+![Sclocka-1.0](sclocka.gif)
+*Sclocka-1.0 with default screensaver*
+
+[![Sclocka-1.1.0](https://img.youtube.com/vi/i5aE6_wzTlk/0.jpg)](https://youtu.be/i5aE6_wzTlk)
+*Sclocka-1.1.0 running external programs as screensavers*
+
+Run external screensavers at your own risk, probably not all of them will work as expected,
+also they may crash and overall consequences (including security) may be unexpected or potentially dangerous.
 
 ### Features and TODO list
 
@@ -112,14 +119,23 @@ Wait for a screensaver to appear
 ```sh
 $ sclocka -h
 
-Sclocka - screen saver/lock for terminals, v1.0.3
+Sclocka - screen saver/lock for terminals, v1.1.0
 
 Usage:
-        sclocka [-b n|f|b|c] [-c] [-B] [-i n] [-s n] [-p] [-P service] [-h]
+        sclocka [-b n|b|c|f] [-c] [-i n] [-s n]
+                [-p] [-P service]
+        sclocka [-B] [-b n|b|c|f] [-c] [-i n]
+                [-p] [-P service]
+        sclocka [-E "/path/to/saver arg1 .. argn"] [-b n|b|c|f] [-c] [-i n]
+                [-p] [-P service]
+        sclocka [-h]
 
-[-b f]          Screen restore: (n)one, (f)ormfeed, (b)uffer, (c)apabilities
-[-c]            Do not clear the window
 [-B]            Black-only, no screensaver animation
+[-E "/path/to/saver arg1 .. argn"]
+                Execute an external screensaver program with arguments
+
+[-b f]          Screen restore: (n)one, (b)uffer, (c)apabilities, (f)ormfeed
+[-c]            Do not clear the window
 [-i 5]          Wait n minutes before launching the screensaver
 [-s 64]         Screensaver speed n in milliseconds
 

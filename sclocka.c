@@ -60,7 +60,7 @@
 #endif
 
 /* -------------------------------------------------------------------------- */
-#define __PROGRAM       "Sclocka - screen saver/lock for terminals, v1.0.3"
+#define __PROGRAM       "Sclocka - screen saver/lock for terminals, v1.1.0"
 
 #define NBF_STDOUT()    setvbuf(stdout, NULL, _IONBF, 0)
 #define LBF_STDOUT()    setvbuf(stdout, NULL, _IOLBF, 0)
@@ -143,8 +143,14 @@ int main(int argc, char *argv[]) {
     int cls = 1;                        /* Perform screen cleaning or not */
     long ival = IVAL;                   /* Start interval in secs */
     int speed = SPEED;                  /* Animation speed in milliseconds */
-    char bflg = RSCR_BUFF;              /* Default restore screen method */
-    int Bflg = 0;                       /* Run screensaver animation */
+    char bflg = RSCR_FMFD;              /* Default restore screen method */
+    int Bflg = 0;                       /* Run screensaver animation or not */
+
+    int Eflg = 0;                       /* Use external saver or not */
+    char *ext_saver[10];                /* Path to external saver, arguments */
+    char **ext_p;                       /* Temporary pointer */
+    pid_t ext_pid;                      /* External saver PID */
+    int ext_status;                     /* Ext saver returned code */
 
     #if (WITH_PAM)
         char *user;                     /* username */
@@ -156,15 +162,16 @@ int main(int argc, char *argv[]) {
     #endif
     unsigned char ff = 0x0C;            /* Form Feed */
 
+
     #if (WITH_PAM)
-        while ((flg = getopt(argc, argv, "b:cBi:pP:s:h")) != -1)
+        while ((flg = getopt(argc, argv, "b:cBE:i:pP:s:h")) != -1)
     #else
-        while ((flg = getopt(argc, argv, "b:cBi:s:h")) != -1)
+        while ((flg = getopt(argc, argv, "b:cBE:i:s:h")) != -1)
     #endif
         switch(flg) {
             case 'b':
                 /* Restore the screen after the saver:
-                (n)one, (b)uffer or default terminal (c)apabilities */
+                (n)one, (f)ormfeed, (b)uffer, (c)apabilities */
                 if (*optarg != RSCR_NONE &&
                     *optarg != RSCR_FMFD &&
                     *optarg != RSCR_BUFF &&
@@ -176,6 +183,13 @@ int main(int argc, char *argv[]) {
                 break;
             case 'B':
                 Bflg = 1;           /* No screensaver animation */
+                break;
+            case 'E':               /* External saver program and arguments */
+                Eflg = 1;
+                for (ext_p = ext_saver; (*ext_p = strsep(&optarg, " \t")) != NULL;)
+                    if (**ext_p != '\0')
+                        if (++ext_p >= &ext_saver[9])
+                            break;
                 break;
             case 'i':
                 if ((ival = strtol(optarg, (char **)NULL, 10)) < 1) {
@@ -201,6 +215,11 @@ int main(int argc, char *argv[]) {
             default:
                 usage(0);
         }
+
+    if (Bflg && Eflg) {
+        fprintf(stderr, "FATAL: Mutually exclusive options -B and -E specified");
+        usage(1);
+    }
 
     if (isatty(STDIN_FILENO)) {
         if (tcgetattr(STDIN_FILENO, &tt) == -1) {
@@ -244,7 +263,10 @@ int main(int argc, char *argv[]) {
     }
 
     /* -- Parent continues here --------------------------------------------- */
+    signal(SIGINT, SIG_IGN);                /* Ignore ^C */
+    signal(SIGTSTP, SIG_IGN);               /* Ignore ^Z */
     signal(SIGWINCH, trap);                 /* Catch window change signal */
+
     #if (WITH_PAM)
         user = getlogin();
         gethostname(host, sizeof(host));
@@ -283,6 +305,7 @@ int main(int argc, char *argv[]) {
                 if (cc > 0) {
                     if (!in_show) write(master, buf, cc);
                 else {
+keypressed:
                         /* Ask for password */
                         #if (WITH_PAM)
                             lock = read_password(buf[0],
@@ -305,36 +328,19 @@ int main(int argc, char *argv[]) {
                                     int boffs = sizeof(scrbuf) - sy*sx - 2*sy*sx;
 
                                     for (k = 0; k < sy*sx + 2*sy*sx; k++) {
+                                        /* TODO: Implement this */
+
                                         /* Detect ASCII ESC sequences and
                                         disable "query" attempts to: ... */
                                         if (scrbuf[boffs + k] == '\033') {
-/*                                            if (scrbuf[boffs + k + 1] == '[' &&
-                                                ((scrbuf[boffs + k + 2] < 48 || scrbuf[boffs + k + 2] > 122) ||
-                                                    (scrbuf[boffs + k + 2] > 58 && scrbuf[boffs + k + 2] < 65))) {
-                                                    k+=4;
-                                                    continue;
-                                            }
-                                            else if (!memcmp(scrbuf + boffs + k, "\033[?25h", 6) &&
-                                                !memcmp(scrbuf + boffs + k, "\033[?25l", 6)) {
-                                                k+=6;
-                                                continue;
-                                            }
-                                            else if (!memcmp(scrbuf + boffs + k, "\033[?47h", 6) &&
-                                                !memcmp(scrbuf + boffs + k, "\033[?47l", 6)) {
-                                                k+=6;
-                                                continue;
-                                            }
-                                            else if (!memcmp(scrbuf + boffs + k, "\033[?1049h", 8) &&
-                                                !memcmp(scrbuf + boffs + k, "\033[?1049l", 8)) {
-                                                k+=8;
-                                                continue;
-                                            }
-                                            else */ if (!memcmp(scrbuf + boffs + k, "\033[6n", 4)) {
+                                            if (!memcmp(scrbuf + boffs + k,
+                                                "\033[6n", 4)) {
                                                 /* ... find cursor position */
                                                 k+=4;
                                                 continue;
                                             }
-                                            else if (k < sy*sx + 2*sy*sx + 1 && scrbuf[boffs + k + 1] == ']') {
+                                            else if (k < sy*sx + 2*sy*sx + 1 &&
+                                                scrbuf[boffs + k + 1] == ']') {
                                                 /* ... fg/bg colors using:
                                                 OSC 10 ; ? BEL and
                                                 OSC 11 ; ? BEL */
@@ -342,14 +348,16 @@ int main(int argc, char *argv[]) {
                                                     k++;
                                                 continue;
                                             }
-                                            else if (k < sy*sx + 2*sy*sx + 1 && scrbuf[boffs + k + 1] == 'P') {
+                                            else if (k < sy*sx + 2*sy*sx + 1 &&
+                                                scrbuf[boffs + k + 1] == 'P') {
                                                 /* Step over DCS, assuming
                                                 it's body 3 bytes long */
                                                 k += 3;
                                                 continue;
                                             }
                                         }
-                                        putchar(scrbuf[sizeof(scrbuf) - sy*sx - 2*sy*sx + k]);
+                                        putchar(scrbuf[sizeof(scrbuf) - sy*sx -
+                                            2*sy*sx + k]);
                                     }
                                 }
                             in_show = 0;
@@ -399,7 +407,22 @@ int main(int argc, char *argv[]) {
             in_show = 1;
             lock = 2;               /* Reset lock to first try */
 
-            if (!Bflg) run_show();
+            if (!Bflg) {
+                if (!Eflg)
+                    run_show();     /* Embedded screensaver */
+                else
+                    /* External screensaver */
+                    if (!(ext_pid = fork())) {
+                        execv(ext_saver[0], ext_saver);
+                        exit(0);
+                    } else {
+                        waitpid(ext_pid, &ext_status, 0);
+                        lock = pflg ? 2 : 0;
+                        start = time(0);
+                        goto keypressed;
+                    }
+            }
+            /* Fall back to black-screen */
         }
     }
 
@@ -563,10 +586,20 @@ void usage(int ecode) {
 
 #if (WITH_PAM)
 	printf("%s\n\nUsage:\n\
-\tsclocka [-b n|b|c] [-c] [-B] [-i n] [-s n] [-p] [-P service] [-h]\n\n\
-[-b %c]\t\tScreen restore: (n)one, (f)ormfeed, (b)uffer, (c)apabilities\n\
-[-c]\t\tDo not clear the window\n\
+\tsclocka [-b n|b|c|f] [-c] [-i n] [-s n]\n\
+\t\t[-p] [-P service]\n\
+\tsclocka [-B] [-b n|b|c|f] [-c] [-i n]\n\
+\t\t[-p] [-P service]\n\
+\tsclocka [-E \"/path/to/saver arg1 .. argn\"] [-b n|b|c|f] [-c] [-i n]\n\
+\t\t[-p] [-P service]\n\
+\tsclocka [-h]\n\
+\n\
 [-B]\t\tBlack-only, no screensaver animation\n\
+[-E \"/path/to/saver arg1 .. argn\"]\n\
+\t\tExecute an external screensaver program with arguments\n\
+\n\
+[-b %c]\t\tScreen restore: (n)one, (b)uffer, (c)apabilities, (f)ormfeed\n\
+[-c]\t\tDo not clear the window\n\
 [-i %d]\t\tWait n minutes before launching the screensaver\n\
 [-s %d]\t\tScreensaver speed n in milliseconds\n\
 \n\
@@ -576,10 +609,17 @@ void usage(int ecode) {
 [-h]\t\tThis message\n\n", __PROGRAM, RSCR_DEFT, IVAL, SPEED, PAM_SERV);
 #else
 	printf("%s\n\nUsage:\n\
-\tsclocka [-b n|b|c] [-c] [-B] [-i n] [-s n] [-P service] [-h]\n\n\
-[-b %c]\t\tScreen restore: (n)one, (f)ormfeed, (b)uffer, (c)apabilities\n\
-[-c]\t\tDo not clear the window\n\
+\tsclocka [-b n|b|c|f] [-c] [-i n] [-s n]\n\
+\tsclocka [-B] [-b n|b|c|f] [-c] [-i n]\n\
+\tsclocka [-E \"/path/to/saver arg1 .. argn\"] [-b n|b|c|f] [-c] [-i n]\n\
+\tsclocka [-h]\n\
+\n\
 [-B]\t\tBlack-only, no screensaver animation\n\
+[-E \"/path/to/saver arg1 .. argn\"]\n\
+\t\tExecute an external screensaver program with arguments\n\
+\n\
+[-b %c]\t\tScreen restore: (n)one, (b)uffer, (c)apabilities, (f)ormfeed\n\
+[-c]\t\tDo not clear the window\n\
 [-i %d]\t\tWait n minutes before launching the screensaver\n\
 [-s %d]\t\tScreensaver speed n in milliseconds\n\
 \n\

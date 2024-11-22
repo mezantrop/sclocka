@@ -1,5 +1,11 @@
 # Changelog
 
+* 2024.11.22        sclocka-1.1.0
+  * `-E  "/path/to/binary/saver args"` option to execute external program as a screensaver.
+    Use at your own risk, probably not all the external screensavers will work as expected,
+    also they may crash and overall consequences (including security) may be unexpected
+    or potentially dangerous.
+
 * 2023.08.18        sclocka-1.0.3
   * `Makefile` fixed, simplified
   * `sclocka.c` minor typo fix
