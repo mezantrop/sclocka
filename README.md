@@ -8,11 +8,7 @@ Protect your terminal with a screensaver and lock it with a password. `Sclocka` 
 
 If you are more interested in a screensaver than a screenlock, check [ASCII Saver - Screensaver for terminals](https://gitlab.com/mezantrop/ascsaver)
 
-![Sclocka-1.0](sclocka.gif)
-*Sclocka-1.0 with default screensaver*
-
 [![Sclocka-1.1.0](https://img.youtube.com/vi/i5aE6_wzTlk/0.jpg)](https://youtu.be/i5aE6_wzTlk)
-*Sclocka-1.1.0 running external programs as screensavers*
 
 Run external screensavers at your own risk, probably not all of them will work as expected,
 also they may crash and overall consequences (including security) may be unexpected or potentially dangerous.
