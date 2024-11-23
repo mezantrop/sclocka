@@ -1,5 +1,8 @@
 # Changelog
 
+* 2024.11.23        sclocka-1.1.2
+  * Missed `FD_ZERO()` added to init the descriptor set to the null set.
+
 * 2024.11.23        sclocka-1.1.1
   * Use `struct winsize` instead of ANSI Escape sequences for getting terminal window size
 

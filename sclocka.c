@@ -271,8 +271,9 @@ int main(int argc, char *argv[]) {
         tv.tv_sec = 0;
         tv.tv_usec = speed * 1000;          /* Microseconds */
 
-        FD_SET(master, &rfd);
+        FD_ZERO(&rfd);
         FD_SET(STDIN_FILENO, &rfd);
+        FD_SET(master, &rfd);
 
         n = select(master + 1, &rfd, 0, 0, &tv);
         if (n < 0 && errno != EINTR) break;
