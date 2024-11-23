@@ -1,5 +1,8 @@
 # Changelog
 
+* 2024.11.23        sclocka-1.1.1
+  * Use `struct winsize` instead of ANSI Escape sequences for getting terminal window size
+
 * 2024.11.22        sclocka-1.1.0
   * `-E  "/path/to/binary/saver args"` option to execute external program as a screensaver.
     Use at your own risk, probably not all the external screensavers will work as expected,

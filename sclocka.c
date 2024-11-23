@@ -60,7 +60,7 @@
 #endif
 
 /* -------------------------------------------------------------------------- */
-#define __PROGRAM       "Sclocka - screen saver/lock for terminals, v1.1.0"
+#define __PROGRAM       "Sclocka - screen saver/lock for terminals, v1.1.1"
 
 #define NBF_STDOUT()    setvbuf(stdout, NULL, _IONBF, 0)
 #define LBF_STDOUT()    setvbuf(stdout, NULL, _IOLBF, 0)
@@ -73,18 +73,6 @@
 #define SET_POS(y, x) fprintf(stdout, "\033[%d;%dH", y, x) /* Set cursor XY */
 #define ASCR()        fputs("\033[?1049h", stdout)         /* Alt scr buffer */
 #define NSCR()        fputs("\033[?1049l", stdout)         /* normal scr buffer */
-
-/* Get cursor position */
-#define GET_POS(y, x) {\
-    fputs("\033[6n", stdout);\
-    scanf("\033[%d;%dR", &y, &x);\
-}
-
-/* Get screen size */
-#define SCR_SIZE(y, x) {\
-    SET_POS(999, 999);\
-    GET_POS(y, x);\
-}
 
 #define PWD_PROMPT      "\r%s@%s password: "
 #define IVAL            5               /* Default start interval in secs */
@@ -236,6 +224,9 @@ int main(int argc, char *argv[]) {
             fprintf(stderr, "FATAL@openpty() %s\n", strerror(errno));
             exit(1);
         }
+
+        sx = win.ws_col;
+        sy = win.ws_row;
     } else {
         fprintf(stderr, "FATAL: Can run on terminals only\n");
         exit(1);
@@ -272,7 +263,7 @@ int main(int argc, char *argv[]) {
         gethostname(host, sizeof(host));
     #endif
 
-    NBF_STDOUT(); GET_POS(cy, cx); SCR_SIZE(sy, sx); SET_POS(cy, cx);
+    NBF_STDOUT();
     start = time(0);                        /* Set initial time */
     srand(start);                           /* randomize seed for screensaver */
 
@@ -558,9 +549,8 @@ void trap(int sig) {
             /* Terminal resized -> resize slave */
             if (ioctl(STDIN_FILENO, TIOCGWINSZ, &win) != -1) {
                 ioctl(slave, TIOCSWINSZ, &win);
-                GET_POS(cy, cx);
-                SCR_SIZE(sy, sx);
-                SET_POS(cy, cx);
+                sx = win.ws_col;
+                sy = win.ws_row;
                 CLR();
             }
             break;
