@@ -1,4 +1,7 @@
 # List of contrinutors
 
 - Chris Pinnock, https://chrispinnock.com
-  - Netbasd and OpenBSD headers
+  - NetBSD and OpenBSD headers
+
+- Dylan, @TheWanderer1983 [https://github.com/TheWanderer1983]
+  - OpenBSD, DEC VT220 testing
