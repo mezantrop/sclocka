@@ -60,7 +60,10 @@
 #endif
 
 /* -------------------------------------------------------------------------- */
-#define __PROGRAM       "Sclocka - screen saver/lock for terminals, v1.1.2"
+#define __PROGRAM       "Sclocka - screen saver/lock for terminals, v1.1.2.1"
+
+#define MAXXDEFAULT     80
+#define MAXYDEFAULT     24
 
 #define NBF_STDOUT()    setvbuf(stdout, NULL, _IONBF, 0)
 #define LBF_STDOUT()    setvbuf(stdout, NULL, _IOLBF, 0)
@@ -88,6 +91,9 @@
 #if (WITH_PAM)
     #define PAM_SERV        "login"
 #endif
+
+/* -------------------------------------------------------------------------- */
+static inline void ignore_int(int i) {(void) i;}
 
 /* -------------------------------------------------------------------------- */
 void quit(int ecode);
@@ -225,8 +231,8 @@ int main(int argc, char *argv[]) {
             exit(1);
         }
 
-        sx = win.ws_col;
-        sy = win.ws_row;
+        sx = win.ws_col ? win.ws_col : MAXXDEFAULT;
+        sy = win.ws_row ? win.ws_row : MAXYDEFAULT;
     } else {
         fprintf(stderr, "FATAL: Can run on terminals only\n");
         exit(1);
@@ -249,7 +255,10 @@ int main(int argc, char *argv[]) {
         if (!(sh = getenv("SHELL"))) sh = _PATH_BSHELL;
         close(master);
         login_tty(slave);
-        execl(sh, sh, "-i", (char *)NULL);
+        if (execl(sh, sh, "-i", (char *)NULL) == -1) {
+            fprintf(stderr, "FATAL@execl(%s) %s\n", sh, strerror(errno));
+            exit(1);
+        }
         exit(0);
     }
 
@@ -272,8 +281,8 @@ int main(int argc, char *argv[]) {
         tv.tv_usec = speed * 1000;          /* Microseconds */
 
         FD_ZERO(&rfd);
-        FD_SET(STDIN_FILENO, &rfd);
         FD_SET(master, &rfd);
+        FD_SET(STDIN_FILENO, &rfd);
 
         n = select(master + 1, &rfd, 0, 0, &tv);
         if (n < 0 && errno != EINTR) break;
@@ -291,11 +300,12 @@ int main(int argc, char *argv[]) {
                 if (cc == 0)
                     if (tcgetattr(master, &stt) == 0 &&
                         (stt.c_lflag & ICANON) != 0)
-                            write(master, &stt.c_cc[VEOF], 1);
+                            ignore_int(write(master, &stt.c_cc[VEOF], 1));
 
                 /* Write data to terminal */
                 if (cc > 0) {
-                    if (!in_show) write(master, buf, cc);
+                    if (!in_show)
+                        ignore_int(write(master, buf, cc));
                 else {
 keypressed:
                         /* Ask for password */
@@ -307,9 +317,13 @@ keypressed:
 
                         if (!pflg || !lock) {
                             /* Allow user to proceed */
-                            CLR(); CLS(); SHOW_CURSOR();
-                            if (bflg == RSCR_FMFD)
-                                write(master, &ff, 1);  /* Send Form Feed */
+                            SHOW_CURSOR();
+
+                            if (cls) {
+                                CLR(); CLS();
+                            }
+                            if (bflg == RSCR_FMFD)  /* Send Form Feed */
+                                ignore_int(write(master, &ff, 1));
                             else if (bflg == RSCR_CAPS)
                                 NSCR();
                             else if (bflg == RSCR_BUFF)
@@ -367,7 +381,7 @@ keypressed:
             if (FD_ISSET(master, &rfd)) {
                 if ((cc = read(master, buf, sizeof(buf))) > 0) {
 
-                    write(STDOUT_FILENO, buf, cc);
+                    ignore_int(write(STDOUT_FILENO, buf, cc));
                     if (cc && bflg == RSCR_BUFF) {
                         scrbufp = sizeof(scrbuf) - cc;
                         memmove(scrbuf, scrbuf + cc, scrbufp);
@@ -405,7 +419,11 @@ keypressed:
                 else
                     /* External screensaver */
                     if (!(ext_pid = fork())) {
-                        execv(ext_saver[0], ext_saver);
+                        if (execv(ext_saver[0], ext_saver) == -1) {
+                            fprintf(stderr, "FATAL@execv(%s) %s\n",
+                                ext_saver[0], strerror(errno));
+                            exit(1);
+                        }
                         exit(0);
                     } else {
                         waitpid(ext_pid, &ext_status, 0);
@@ -550,8 +568,8 @@ void trap(int sig) {
             /* Terminal resized -> resize slave */
             if (ioctl(STDIN_FILENO, TIOCGWINSZ, &win) != -1) {
                 ioctl(slave, TIOCSWINSZ, &win);
-                sx = win.ws_col;
-                sy = win.ws_row;
+                sx = win.ws_col ? win.ws_col : MAXXDEFAULT;
+                sy = win.ws_row ? win.ws_row : MAXYDEFAULT;
                 CLR();
             }
             break;

@@ -1,5 +1,10 @@
 # Changelog
 
+* 2024.11.23        sclocka-1.1.2.1
+  * Set default terminal sreen size to 80x24
+  * Suppress `-Wunused-result` when compiled under GCC
+  * Show an error message when failed to start an external screensaver
+
 * 2024.11.23        sclocka-1.1.2
   * Missed `FD_ZERO()` added to init the descriptor set to the null set.
 
