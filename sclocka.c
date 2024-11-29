@@ -5,7 +5,7 @@
 /* Based on ASCII Saver - https://gitlab.com/mezantrop/ascsaver */
 
 /*
-* Copyright (c) 2019-2023, Mikhail Zakharov <zmey20000@yahoo.com>
+* Copyright (c) 2019-2024, Mikhail Zakharov <zmey20000@yahoo.com>
 *
 * Redistribution and use in source and binary forms, with or without
 * modification, are permitted provided that the following conditions are met:
@@ -60,7 +60,7 @@
 #endif
 
 /* -------------------------------------------------------------------------- */
-#define __PROGRAM       "Sclocka - screen saver/lock for terminals, v1.1.2.1"
+#define __PROGRAM       "Sclocka - screen saver/lock for terminals, v1.1.2.2"
 
 #define MAXXDEFAULT     80
 #define MAXYDEFAULT     24
@@ -76,6 +76,18 @@
 #define SET_POS(y, x) fprintf(stdout, "\033[%d;%dH", y, x) /* Set cursor XY */
 #define ASCR()        fputs("\033[?1049h", stdout)         /* Alt scr buffer */
 #define NSCR()        fputs("\033[?1049l", stdout)         /* normal scr buffer */
+
+/* Get cursor position */
+#define GET_POS(y, x) {\
+    fputs("\033[6n", stdout);\
+    scanf("\033[%d;%dR", &y, &x);\
+}
+
+/* Get screen size */
+#define SCR_SIZE(y, x) {\
+    SET_POS(999, 999);\
+    GET_POS(y, x);\
+}
 
 #define PWD_PROMPT      "\r%s@%s password: "
 #define IVAL            5               /* Default start interval in secs */
@@ -146,6 +158,8 @@ int main(int argc, char *argv[]) {
     pid_t ext_pid;                      /* External saver PID */
     int ext_status;                     /* Ext saver returned code */
 
+    int rflg = 1;                       /* Terminal raw mode + echo off */
+
     #if (WITH_PAM)
         char *user;                     /* username */
         char host[MAXHOSTNAMELEN];      /* hostname */
@@ -158,9 +172,9 @@ int main(int argc, char *argv[]) {
 
 
     #if (WITH_PAM)
-        while ((flg = getopt(argc, argv, "b:cBE:i:pP:s:h")) != -1)
+        while ((flg = getopt(argc, argv, "b:cBE:i:pP:rs:h")) != -1)
     #else
-        while ((flg = getopt(argc, argv, "b:cBE:i:s:h")) != -1)
+        while ((flg = getopt(argc, argv, "b:cBE:i:rs:h")) != -1)
     #endif
         switch(flg) {
             case 'b':
@@ -199,6 +213,9 @@ int main(int argc, char *argv[]) {
                 pam_service = optarg;
                 break;
         #endif
+            case 'r':
+                rflg = 0;   /* Don't make terminal raw, don't disable echo */
+                break;
             case 's':
                 if ((speed = strtol(optarg, (char **)NULL, 10)) < 1) {
                     fprintf(stderr, "FATAL: wrong [-s speed] value");
@@ -231,18 +248,23 @@ int main(int argc, char *argv[]) {
             exit(1);
         }
 
-        sx = win.ws_col ? win.ws_col : MAXXDEFAULT;
-        sy = win.ws_row ? win.ws_row : MAXYDEFAULT;
+        if (!(sx = win.ws_col) || !(sy = win.ws_row)) {
+            GET_POS(cy, cx); SCR_SIZE(sy, sx); SET_POS(cy, cx);
+        }
+        if (!sx) sx = MAXXDEFAULT;
+        if (!sy) sy = MAXYDEFAULT;
     } else {
         fprintf(stderr, "FATAL: Can run on terminals only\n");
         exit(1);
     }
 
-    /* Make terminal raw and disable echo */
-    rtt = tt;
-    cfmakeraw(&rtt);
-    rtt.c_lflag &= ~ECHO;
-    tcsetattr(STDIN_FILENO, TCSAFLUSH, &rtt);
+    if (rflg) {
+        /* Make terminal raw and disable echo */
+        rtt = tt;
+        cfmakeraw(&rtt);
+        rtt.c_lflag &= ~ECHO;
+        tcsetattr(STDIN_FILENO, TCSAFLUSH, &rtt);
+    }
 
     /* -- Error in fork() --------------------------------------------------- */
     if ((pid = fork()) < 0) {
@@ -568,8 +590,11 @@ void trap(int sig) {
             /* Terminal resized -> resize slave */
             if (ioctl(STDIN_FILENO, TIOCGWINSZ, &win) != -1) {
                 ioctl(slave, TIOCSWINSZ, &win);
-                sx = win.ws_col ? win.ws_col : MAXXDEFAULT;
-                sy = win.ws_row ? win.ws_row : MAXYDEFAULT;
+                if (!(sx = win.ws_col) || !(sy = win.ws_row)) {
+                    GET_POS(cy, cx); SCR_SIZE(sy, sx); SET_POS(cy, cx);
+                }
+                if (!sx) sx = MAXXDEFAULT;
+                if (!sy) sy = MAXYDEFAULT;
                 CLR();
             }
             break;
@@ -595,12 +620,12 @@ void usage(int ecode) {
 
 #if (WITH_PAM)
 	printf("%s\n\nUsage:\n\
-\tsclocka [-b n|b|c|f] [-c] [-i n] [-s n]\n\
+\tsclocka [-b n|b|c|f] [-c] [-i n] [-s n] [-r]\n\
 \t\t[-p] [-P service]\n\
-\tsclocka [-B] [-b n|b|c|f] [-c] [-i n]\n\
+\tsclocka [-B] [-b n|b|c|f] [-c] [-i n] [-r]\n\
 \t\t[-p] [-P service]\n\
 \tsclocka [-E \"/path/to/saver arg1 .. argn\"] [-b n|b|c|f] [-c] [-i n]\n\
-\t\t[-p] [-P service]\n\
+\t\t[-r] [-p] [-P service]\n\
 \tsclocka [-h]\n\
 \n\
 [-B]\t\tBlack-only, no screensaver animation\n\
@@ -614,6 +639,8 @@ void usage(int ecode) {
 \n\
 [-p]\t\tDisable PAM password check\n\
 [-P %s]\tUse custom PAM service\n\
+\n\
+[-r]\t\tDo not enable raw terminal mode and disable echo\n\
 \n\
 [-h]\t\tThis message\n\n", __PROGRAM, RSCR_DEFT, IVAL, SPEED, PAM_SERV);
 #else
@@ -631,6 +658,8 @@ void usage(int ecode) {
 [-c]\t\tDo not clear the window\n\
 [-i %d]\t\tWait n minutes before launching the screensaver\n\
 [-s %d]\t\tScreensaver speed n in milliseconds\n\
+\n\
+[-r]\t\tDo not enable raw terminal mode and disable echo\n\
 \n\
 [-h]\t\tThis message\n\n", __PROGRAM, RSCR_DEFT, IVAL, SPEED);
 #endif

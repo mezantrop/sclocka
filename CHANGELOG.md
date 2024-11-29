@@ -1,5 +1,9 @@
 # Changelog
 
+* 2024.11.29        sclocka-1.1.2.2
+  * ANSI Escape secuences is back as a backup method of getting the screen size
+  * Use `-r` option if you dont want to disabe echo and put terminal into raw mode
+
 * 2024.11.23        sclocka-1.1.2.1
   * Set default terminal sreen size to 80x24
   * Suppress `-Wunused-result` when compiled under GCC

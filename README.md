@@ -6,7 +6,7 @@
 
 Protect your terminal with a screensaver and lock it with a password. `Sclocka` runs on *BSD, macOS and Linux
 
-[![Sclocka-1.1.0](sclocka.gif)](https://youtu.be/i5aE6_wzTlk)
+[![Sclocka](sclocka.gif)](https://youtu.be/i5aE6_wzTlk)
 *Click to see video*
 
 Run external screensavers at your own risk, probably not all of them will work as expected,
@@ -114,15 +114,15 @@ Wait for a screensaver to appear
 ```sh
 $ sclocka -h
 
-Sclocka - screen saver/lock for terminals, v1.1.0
+Sclocka - screen saver/lock for terminals, v1.1.2.2
 
 Usage:
-        sclocka [-b n|b|c|f] [-c] [-i n] [-s n]
+        sclocka [-b n|b|c|f] [-c] [-i n] [-s n] [-r]
                 [-p] [-P service]
-        sclocka [-B] [-b n|b|c|f] [-c] [-i n]
+        sclocka [-B] [-b n|b|c|f] [-c] [-i n] [-r]
                 [-p] [-P service]
         sclocka [-E "/path/to/saver arg1 .. argn"] [-b n|b|c|f] [-c] [-i n]
-                [-p] [-P service]
+                [-r] [-p] [-P service]
         sclocka [-h]
 
 [-B]            Black-only, no screensaver animation
@@ -136,6 +136,8 @@ Usage:
 
 [-p]            Disable PAM password check
 [-P login]      Use custom PAM service
+
+[-r]            Do not enable raw terminal mode
 
 [-h]            This message
 ```
