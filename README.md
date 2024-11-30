@@ -6,11 +6,18 @@
 
 Protect your terminal with a screensaver and lock it with a password. `Sclocka` runs on *BSD, macOS and Linux
 
-[![Sclocka](sclocka.gif)](https://youtu.be/i5aE6_wzTlk)
+[![Sclocka](media/sclocka.gif)](https://youtu.be/i5aE6_wzTlk)
+<br>
 *Click to see video*
 
 Run external screensavers at your own risk, probably not all of them will work as expected,
 also they may crash and overall consequences (including security) may be unexpected or potentially dangerous.
+
+### Sclocka on real hardware
+
+DEC TV220, thanks [@TheWanderer1983](https://github.com/TheWanderer1983)<br>
+<img src="media/sclocka-DEC-VT220-start.jpg" width="33.3%">
+<img src="media/sclocka-DEC-VT220-cmatrix.jpg" width="33.3%">
 
 ### Features and TODO list
 
@@ -21,8 +28,7 @@ also they may crash and overall consequences (including security) may be unexpec
   - [x] macOS
   - [x] FreeBSD, NetBSD, OpenBSD
   - [ ] Others to be done
-- [ ] *Optional*. Integration with popular shells as a standard feature (?)
-- [ ] *Optional*. More screensaver animation types
+- [ ] Sclocka as login shell
 - [ ] Packages/ports
 - [ ] Documentation
 
