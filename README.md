@@ -16,8 +16,8 @@ also they may crash and overall consequences (including security) may be unexpec
 ### Sclocka on real hardware
 
 DEC TV220, thanks [@TheWanderer1983](https://github.com/TheWanderer1983)<br>
-<img src="media/sclocka-DEC-VT220-start.jpg" width="50%">
-<img src="media/sclocka-DEC-VT220-cmatrix.jpg" width="50%">
+<img src="media/sclocka-DEC-VT220-start.jpg" width="40%">
+<img src="media/sclocka-DEC-VT220-cmatrix.jpg" width="40%">
 
 ### Features and TODO list
 
